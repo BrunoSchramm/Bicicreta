@@ -1,12 +1,11 @@
 package MODEL;
 
-import java.time.LocalDateTime;
-public class Encomenda {
+public class Entrega {
     private Integer id;
     private Integer idClientes;
     private Integer idUsuarios;
-    private LocalDateTime dataPedido;
-    private LocalDateTime dataEntrega;
+    private String dataPedido;
+    private String dataEntrega;
     private EstadoAtual estadoAtual;
     private Double valorTotal;
 
@@ -16,7 +15,8 @@ public class Encomenda {
     public enum EstadoAtual {
         EM_ANDAMENTO("Em andamento"),
         PAUSADA("Pausada"),
-        ESPERANDO_ENTREGA("Esperando entrega");
+        ESPERANDO_ENTREGA("Esperando entrega"),
+        ENTREGUE("Entregue");
 
 
         private final String descricao;
@@ -32,10 +32,10 @@ public class Encomenda {
         }
     }
 
-    public Encomenda() {
+    public Entrega() {
     }
 
-    public Encomenda(Integer id, Integer idClientes, Integer idUsuarios, LocalDateTime dataPedido, LocalDateTime dataEntrega, EstadoAtual estadoAtual, Double valorTotal) {
+    public Entrega(Integer id, Integer idClientes, Integer idUsuarios, String  dataPedido, String  dataEntrega, EstadoAtual estadoAtual, Double valorTotal) {
         this.id = id;
         this.idClientes = idClientes;
         this.idUsuarios = idUsuarios;
@@ -69,19 +69,19 @@ public class Encomenda {
         this.idUsuarios = idUsuarios;
     }
 
-    public LocalDateTime getDataPedido() {
+    public String  getDataPedido() {
         return dataPedido;
     }
 
-    public void setDataPedido(LocalDateTime dataPedido) {
+    public void setDataPedido(String  dataPedido) {
         this.dataPedido = dataPedido;
     }
 
-    public LocalDateTime getDataEntrega() {
+    public String  getDataEntrega() {
         return dataEntrega;
     }
 
-    public void setDataEntrega(LocalDateTime dataEntrega) {
+    public void setDataEntrega(String  dataEntrega) {
         this.dataEntrega = dataEntrega;
     }
 

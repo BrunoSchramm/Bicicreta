@@ -3,7 +3,7 @@ package MODEL;
 public class Insumo {
     private Integer id;
     private String nome;
-    private Integer unidadeMedida;
+    private String unidadeMedida;
     private Integer quantquantidadeAtual;
     private Integer estoqueMinimo;
 
@@ -11,7 +11,7 @@ public class Insumo {
     public Insumo() {
     }
 
-    public Insumo(Integer id, String nome, Integer unidadeMedida, Integer quantquantidadeAtual, Integer estoqueMinimo) {
+    public Insumo(Integer id, String nome, String unidadeMedida, Integer quantquantidadeAtual, Integer estoqueMinimo) {
         this.id = id;
         this.nome = nome;
         this.unidadeMedida = unidadeMedida;
@@ -35,11 +35,11 @@ public class Insumo {
         this.nome = nome;
     }
 
-    public Integer getUnidadeMedida() {
+    public String getUnidadeMedida() {
         return unidadeMedida;
     }
 
-    public void setUnidadeMedida(Integer unidadeMedida) {
+    public void setUnidadeMedida(String unidadeMedida) {
         this.unidadeMedida = unidadeMedida;
     }
 
