@@ -7,12 +7,14 @@ import MODEL.Movimentacao;
 import UTIL.SessaoUsuario;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class MovimentacoesPanel extends JPanel {
+
     private MovimentacaoDao movDao = new MovimentacaoDao();
     private InsumoDao insumoDao = new InsumoDao();
     private DefaultTableModel model;
@@ -20,26 +22,58 @@ public class MovimentacoesPanel extends JPanel {
 
     public MovimentacoesPanel() {
         setLayout(new BorderLayout(15, 15));
+        setBackground(new Color(24, 24, 24));
         setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
         JPanel card = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
-        JTextField txtIdPeca = new JTextField(4);
-        JTextField txtQtd = new JTextField(5);
-        JComboBox<String> cbTipo = new JComboBox<>(new String[]{"ENTRADA", "SAIDA"});
-        JButton btnLancar = new JButton("Registrar Movimentação");
+        card.setBackground(new Color(32, 32, 32));
+        card.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(50, 50, 50), 1),
+                BorderFactory.createEmptyBorder(10, 10, 10, 10)
+        ));
 
-        card.add(new JLabel("ID Peça:")); card.add(txtIdPeca);
-        card.add(new JLabel("Qtd:")); card.add(txtQtd);
-        card.add(new JLabel("Tipo:")); card.add(cbTipo);
+        JTextField txtIdPeca = criarCampoTexto(4);
+        JTextField txtQtd = criarCampoTexto(5);
+
+        JComboBox<String> cbTipo = new JComboBox<>(new String[]{"ENTRADA", "SAIDA"});
+        cbTipo.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        cbTipo.setBackground(new Color(45, 45, 45));
+        cbTipo.setForeground(Color.WHITE);
+
+        JButton btnLancar = new JButton("Registrar Movimentação");
+        btnLancar.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btnLancar.setBackground(new Color(243, 108, 33));
+        btnLancar.setForeground(Color.WHITE);
+        btnLancar.setFocusPainted(false);
+
+        card.add(criarLabel("ID Peça:")); card.add(txtIdPeca);
+        card.add(criarLabel("Qtd:")); card.add(txtQtd);
+        card.add(criarLabel("Tipo:")); card.add(cbTipo);
         card.add(btnLancar);
 
         model = new DefaultTableModel(new String[]{"ID Mov.", "ID Peça", "Tipo", "Quantidade", "Data/Hora", "Usuário ID"}, 0) {
-            @Override public boolean isCellEditable(int r, int c) { return false; }
+            @Override
+            public boolean isCellEditable(int r, int c) {
+                return false;
+            }
         };
+
         JTable table = new JTable(model);
-        table.setFont(new Font("Segoe UI", Font.PLAIN, 15));
-        table.setRowHeight(35);
-        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 15));
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        table.setRowHeight(32);
+        table.setBackground(new Color(35, 35, 35));
+        table.setForeground(Color.WHITE);
+        table.setGridColor(new Color(55, 55, 55));
+        table.setSelectionBackground(new Color(243, 108, 33));
+        table.setSelectionForeground(Color.WHITE);
+
+        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 14));
+        table.getTableHeader().setBackground(new Color(45, 45, 45));
+        table.getTableHeader().setForeground(new Color(243, 108, 33));
+
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+        table.setDefaultRenderer(Object.class, centerRenderer);
 
         btnLancar.addActionListener(e -> {
             try {
@@ -60,6 +94,7 @@ public class MovimentacoesPanel extends JPanel {
 
                 int idUser = SessaoUsuario.getUsuarioLogado() != null ? SessaoUsuario.getUsuarioLogado().getId() : 1;
                 movDao.registrarMovimentacao(new Movimentacao(0, idPeca, idUser, tipo, qtd, LocalDateTime.now()));
+
                 carregar();
                 txtIdPeca.setText("");
                 txtQtd.setText("");
@@ -69,9 +104,34 @@ public class MovimentacoesPanel extends JPanel {
             }
         });
 
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.getViewport().setBackground(new Color(35, 35, 35));
+        scrollPane.setBorder(BorderFactory.createLineBorder(new Color(50, 50, 50)));
+
         carregar();
+
         add(card, BorderLayout.NORTH);
-        add(new JScrollPane(table), BorderLayout.CENTER);
+        add(scrollPane, BorderLayout.CENTER);
+    }
+
+    private JLabel criarLabel(String texto) {
+        JLabel lbl = new JLabel(texto);
+        lbl.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lbl.setForeground(Color.WHITE);
+        return lbl;
+    }
+
+    private JTextField criarCampoTexto(int colunas) {
+        JTextField txt = new JTextField(colunas);
+        txt.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        txt.setBackground(new Color(45, 45, 45));
+        txt.setForeground(Color.WHITE);
+        txt.setCaretColor(Color.WHITE);
+        txt.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(70, 70, 70), 1),
+                BorderFactory.createEmptyBorder(4, 6, 4, 6)
+        ));
+        return txt;
     }
 
     public void carregar() {
@@ -88,6 +148,8 @@ public class MovimentacoesPanel extends JPanel {
                         m.getIdUsuarios()
                 });
             }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

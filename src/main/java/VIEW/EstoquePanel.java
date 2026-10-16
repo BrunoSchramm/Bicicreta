@@ -4,48 +4,69 @@ import DAO.InsumoDao;
 import MODEL.Insumo;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 public class EstoquePanel extends JPanel {
+
     private InsumoDao insumoDao = new InsumoDao();
     private DefaultTableModel model;
     private int selectedId = -1;
 
+    private JTextField txtNome;
+    private JTextField txtUnidade;
+    private JTextField txtQtd;
+    private JTextField txtMin;
+    private JButton btnAcao;
+
     public EstoquePanel() {
         setLayout(new BorderLayout(15, 15));
+        setBackground(new Color(24, 24, 24));
         setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
         model = new DefaultTableModel(new String[]{"ID Peça", "Nome Peça", "Unidade", "Qtd Atual", "Estoque Mínimo"}, 0) {
-            @Override public boolean isCellEditable(int r, int c) { return false; }
+            @Override
+            public boolean isCellEditable(int r, int c) {
+                return false;
+            }
         };
+
         JTable table = new JTable(model);
-        table.setFont(new Font("Segoe UI", Font.PLAIN, 15));
-        table.setRowHeight(35);
-        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 15));
+        estilitarTabela(table);
 
         JPanel formPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
-        JTextField txtNome = new JTextField(10);
-        JTextField txtUnidade = new JTextField(4);
-        JTextField txtQtd = new JTextField(4);
-        JTextField txtMin = new JTextField(4);
+        formPanel.setBackground(new Color(32, 32, 32));
+        formPanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(50, 50, 50), 1),
+                BorderFactory.createEmptyBorder(10, 10, 10, 10)
+        ));
 
-        JButton btnAcao = new JButton("Adicionar Peça");
-        btnAcao.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        btnAcao.setBackground(new Color(40, 110, 90));
+        txtNome = criarCampoTexto(10);
+        txtUnidade = criarCampoTexto(4);
+        txtQtd = criarCampoTexto(4);
+        txtMin = criarCampoTexto(4);
+
+        btnAcao = new JButton("Adicionar Peça");
+        btnAcao.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btnAcao.setBackground(new Color(243, 108, 33));
         btnAcao.setForeground(Color.WHITE);
-        btnAcao.setPreferredSize(new Dimension(160, 36));
+        btnAcao.setFocusPainted(false);
+        btnAcao.setPreferredSize(new Dimension(150, 34));
 
         JButton btnLimpar = new JButton("Limpar");
-        btnLimpar.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        btnLimpar.setPreferredSize(new Dimension(90, 36));
+        btnLimpar.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btnLimpar.setBackground(new Color(60, 60, 60));
+        btnLimpar.setForeground(Color.WHITE);
+        btnLimpar.setFocusPainted(false);
+        btnLimpar.setPreferredSize(new Dimension(90, 34));
 
-        formPanel.add(new JLabel("Nome:")); formPanel.add(txtNome);
-        formPanel.add(new JLabel("Unid:")); formPanel.add(txtUnidade);
-        formPanel.add(new JLabel("Qtd:")); formPanel.add(txtQtd);
-        formPanel.add(new JLabel("Mín:")); formPanel.add(txtMin);
+        formPanel.add(criarLabel("Nome:")); formPanel.add(txtNome);
+        formPanel.add(criarLabel("Unid:")); formPanel.add(txtUnidade);
+        formPanel.add(criarLabel("Qtd:")); formPanel.add(txtQtd);
+        formPanel.add(criarLabel("Min:")); formPanel.add(txtMin);
         formPanel.add(btnAcao);
         formPanel.add(btnLimpar);
 
@@ -55,15 +76,12 @@ public class EstoquePanel extends JPanel {
             txtQtd.setText("");
             txtMin.setText("");
             table.clearSelection();
+            selectedId = -1;
+            btnAcao.setText("Adicionar Peça");
+            btnAcao.setBackground(new Color(243, 108, 33));
         };
 
         btnLimpar.addActionListener(e -> resetForm.run());
-
-        table.addMouseListener(new MouseAdapter() {
-            @Override public void mouseClicked(MouseEvent e) {
-                if (table.rowAtPoint(e.getPoint()) == -1) table.clearSelection();
-            }
-        });
 
         table.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
@@ -74,12 +92,11 @@ public class EstoquePanel extends JPanel {
                     txtUnidade.setText(model.getValueAt(row, 2).toString());
                     txtQtd.setText(model.getValueAt(row, 3).toString());
                     txtMin.setText(model.getValueAt(row, 4).toString());
+
                     btnAcao.setText("Salvar Alterações");
                     btnAcao.setBackground(new Color(40, 120, 180));
                 } else {
-                    selectedId = -1;
-                    btnAcao.setText("Adicionar Peça");
-                    btnAcao.setBackground(new Color(40, 110, 90));
+                    resetForm.run();
                 }
             }
         });
@@ -90,10 +107,12 @@ public class EstoquePanel extends JPanel {
                     JOptionPane.showMessageDialog(this, "Preencha o nome da peça!", "Aviso", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
+
                 int qtd = Integer.parseInt(txtQtd.getText().trim());
                 int min = Integer.parseInt(txtMin.getText().trim());
 
                 Insumo i = new Insumo(selectedId == -1 ? 0 : selectedId, txtNome.getText().trim(), txtUnidade.getText().trim(), qtd, min);
+
                 if (selectedId == -1) {
                     insumoDao.inserir(i);
                     JOptionPane.showMessageDialog(this, "Peça cadastrada com sucesso!");
@@ -101,6 +120,7 @@ public class EstoquePanel extends JPanel {
                     insumoDao.atualizar(i);
                     JOptionPane.showMessageDialog(this, "Peça atualizada com sucesso!");
                 }
+
                 carregar();
                 resetForm.run();
             } catch (Exception ex) {
@@ -109,17 +129,21 @@ public class EstoquePanel extends JPanel {
         });
 
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        bottomPanel.setOpaque(false);
+
         JButton btnExcluir = new JButton("Excluir Peça Selecionada");
         btnExcluir.setBackground(new Color(180, 50, 50));
         btnExcluir.setForeground(Color.WHITE);
-        btnExcluir.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        btnExcluir.setPreferredSize(new Dimension(230, 38));
+        btnExcluir.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btnExcluir.setFocusPainted(false);
+        btnExcluir.setPreferredSize(new Dimension(210, 36));
 
         btnExcluir.addActionListener(e -> {
             if (selectedId == -1) {
                 JOptionPane.showMessageDialog(this, "Selecione uma peça para excluir!", "Aviso", JOptionPane.WARNING_MESSAGE);
                 return;
             }
+
             if (JOptionPane.showConfirmDialog(this, "Excluir peça ID " + selectedId + "?", "Confirmação", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
                 try {
                     insumoDao.excluir(selectedId);
@@ -131,17 +155,63 @@ public class EstoquePanel extends JPanel {
                 }
             }
         });
+
         bottomPanel.add(btnExcluir);
 
         JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.getViewport().setBackground(new Color(35, 35, 35));
+        scrollPane.setBorder(BorderFactory.createLineBorder(new Color(50, 50, 50)));
+
         scrollPane.getViewport().addMouseListener(new MouseAdapter() {
-            @Override public void mouseClicked(MouseEvent e) { table.clearSelection(); }
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                table.clearSelection();
+            }
         });
 
         carregar();
+
         add(formPanel, BorderLayout.NORTH);
         add(scrollPane, BorderLayout.CENTER);
         add(bottomPanel, BorderLayout.SOUTH);
+    }
+
+    private JLabel criarLabel(String texto) {
+        JLabel lbl = new JLabel(texto);
+        lbl.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lbl.setForeground(Color.WHITE);
+        return lbl;
+    }
+
+    private JTextField criarCampoTexto(int colunas) {
+        JTextField txt = new JTextField(colunas);
+        txt.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        txt.setBackground(new Color(45, 45, 45));
+        txt.setForeground(Color.WHITE);
+        txt.setCaretColor(Color.WHITE);
+        txt.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(70, 70, 70), 1),
+                BorderFactory.createEmptyBorder(4, 6, 4, 6)
+        ));
+        return txt;
+    }
+
+    private void estilitarTabela(JTable table) {
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        table.setRowHeight(32);
+        table.setBackground(new Color(35, 35, 35));
+        table.setForeground(Color.WHITE);
+        table.setGridColor(new Color(55, 55, 55));
+        table.setSelectionBackground(new Color(243, 108, 33));
+        table.setSelectionForeground(Color.WHITE);
+
+        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 14));
+        table.getTableHeader().setBackground(new Color(45, 45, 45));
+        table.getTableHeader().setForeground(new Color(243, 108, 33));
+
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+        table.setDefaultRenderer(Object.class, centerRenderer);
     }
 
     public void carregar() {
@@ -150,6 +220,8 @@ public class EstoquePanel extends JPanel {
             for (Insumo i : insumoDao.listar()) {
                 model.addRow(new Object[]{i.getId(), i.getNome(), i.getUnidadeMedida(), i.getQuantquantidadeAtual(), i.getEstoqueMinimo()});
             }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

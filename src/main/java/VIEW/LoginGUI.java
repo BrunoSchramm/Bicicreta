@@ -6,75 +6,178 @@ import UTIL.SessaoUsuario;
 
 import javax.swing.*;
 import java.awt.*;
-import java.sql.SQLException;
+import java.io.File;
 
 public class LoginGUI extends JFrame {
+
     private JTextField txtEmail;
     private JPasswordField txtSenha;
-    private UsuarioDao usuarioDao = new UsuarioDao();
+    private JLabel lblMensagem;
 
     public LoginGUI() {
-        setTitle("Oficina Bicicleta - Autenticação");
-        setSize(500, 360);
+        setTitle("Fiasco de Bike - Login");
+        setSize(420, 580);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setResizable(false);
 
-        JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBackground(new Color(240, 242, 245));
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(12, 12, 12, 12);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+        // Painel Principal com fundo Escuro (#181818)
+        JPanel mainPanel = new JPanel();
+        mainPanel.setBackground(new Color(24, 24, 24));
+        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(25, 35, 25, 35));
 
-        JLabel lblTitulo = new JLabel("BICICLETA S.A.", SwingConstants.CENTER);
-        lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 26));
-        lblTitulo.setForeground(new Color(40, 110, 90));
-        gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
-        panel.add(lblTitulo, gbc);
+        // --- 1. LOGO DA OFICINA ---
+        JLabel lblLogo = new JLabel();
+        lblLogo.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        gbc.gridwidth = 1;
-        gbc.gridx = 0; gbc.gridy = 1;
-        panel.add(new JLabel("E-mail:"), gbc);
+        ImageIcon icon = carregarLogo();
+        if (icon != null) {
+            lblLogo.setIcon(icon);
+        } else {
+            // Texto alternativo caso a imagem logo.png não seja encontrada
+            lblLogo.setText("FIASCO DE BIKE");
+            lblLogo.setFont(new Font("Segoe UI", Font.BOLD, 26));
+            lblLogo.setForeground(new Color(243, 108, 33)); // Laranja
+        }
 
-        txtEmail = new JTextField("akon.admin@bicicleta.com", 18);
-        txtEmail.setPreferredSize(new Dimension(220, 35));
-        gbc.gridx = 1; gbc.gridy = 1;
-        panel.add(txtEmail, gbc);
+        JLabel lblSubtitulo = new JLabel("SISTEMA DE GESTÃO DE OFICINA");
+        lblSubtitulo.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lblSubtitulo.setForeground(new Color(170, 170, 170));
+        lblSubtitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        gbc.gridx = 0; gbc.gridy = 2;
-        panel.add(new JLabel("Palavra-passe:"), gbc);
+        // --- 2. FORMULÁRIO DE LOGIN ---
+        JPanel formPanel = new JPanel();
+        formPanel.setOpaque(false);
+        formPanel.setLayout(new GridLayout(4, 1, 5, 6));
+        formPanel.setMaximumSize(new Dimension(330, 170));
 
-        txtSenha = new JPasswordField("tututu", 18);
-        txtSenha.setPreferredSize(new Dimension(220, 35));
-        gbc.gridx = 1; gbc.gridy = 2;
-        panel.add(txtSenha, gbc);
+        JLabel lblEmail = new JLabel("E-mail do Operador:");
+        lblEmail.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lblEmail.setForeground(Color.WHITE);
 
-        JButton btnLogin = new JButton("Entrar no Sistema");
-        btnLogin.setBackground(new Color(40, 110, 90));
+        txtEmail = new JTextField("akon.admin@bicicleta.com"); // E-mail padrão
+        txtEmail.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        txtEmail.setBackground(new Color(40, 40, 40));
+        txtEmail.setForeground(Color.WHITE);
+        txtEmail.setCaretColor(Color.WHITE);
+        txtEmail.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(70, 70, 70), 1),
+                BorderFactory.createEmptyBorder(6, 10, 6, 10)
+        ));
+
+        JLabel lblSenha = new JLabel("Senha:");
+        lblSenha.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lblSenha.setForeground(Color.WHITE);
+
+        txtSenha = new JPasswordField("tututu"); // Senha padrão
+        txtSenha.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        txtSenha.setBackground(new Color(40, 40, 40));
+        txtSenha.setForeground(Color.WHITE);
+        txtSenha.setCaretColor(Color.WHITE);
+        txtSenha.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(70, 70, 70), 1),
+                BorderFactory.createEmptyBorder(6, 10, 6, 10)
+        ));
+
+        formPanel.add(lblEmail);
+        formPanel.add(txtEmail);
+        formPanel.add(lblSenha);
+        formPanel.add(txtSenha);
+
+        // --- 3. BOTÃO DE ENTRADA ---
+        JButton btnLogin = new JButton("ENTRAR");
+        btnLogin.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        btnLogin.setBackground(new Color(243, 108, 33)); // Laranja Lançamento Fiasco
         btnLogin.setForeground(Color.WHITE);
-        btnLogin.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        btnLogin.setPreferredSize(new Dimension(200, 42));
-        gbc.gridx = 0; gbc.gridy = 3; gbc.gridwidth = 2;
-        panel.add(btnLogin, gbc);
+        btnLogin.setFocusPainted(false);
+        btnLogin.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnLogin.setAlignmentX(Component.CENTER_ALIGNMENT);
+        btnLogin.setMaximumSize(new Dimension(330, 42));
+        btnLogin.setBorder(BorderFactory.createEmptyBorder(8, 0, 8, 0));
 
+        lblMensagem = new JLabel(" ");
+        lblMensagem.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lblMensagem.setForeground(new Color(255, 90, 90));
+        lblMensagem.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        // Ações do botão e tecla Enter
         btnLogin.addActionListener(e -> efetuarLogin());
-        add(panel);
+        txtSenha.addActionListener(e -> efetuarLogin());
+
+        // Adicionando elementos com espaçamento
+        mainPanel.add(lblLogo);
+        mainPanel.add(Box.createRigidArea(new Dimension(0, 8)));
+        mainPanel.add(lblSubtitulo);
+        mainPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+        mainPanel.add(formPanel);
+        mainPanel.add(Box.createRigidArea(new Dimension(0, 8)));
+        mainPanel.add(lblMensagem);
+        mainPanel.add(Box.createRigidArea(new Dimension(0, 8)));
+        mainPanel.add(btnLogin);
+
+        add(mainPanel);
+    }
+
+    private ImageIcon carregarLogo() {
+        try {
+            java.net.URL imgURL = getClass().getResource("/logo.png");
+            if (imgURL == null) {
+                imgURL = getClass().getResource("logo.png");
+            }
+
+            Image img = null;
+            if (imgURL != null) {
+                img = new ImageIcon(imgURL).getImage();
+            } else if (new File("logo.png").exists()) {
+                img = new ImageIcon("logo.png").getImage();
+            }
+
+            if (img != null) {
+                Image scaled = img.getScaledInstance(180, 180, Image.SCALE_SMOOTH);
+                return new ImageIcon(scaled);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null; // Retorna null se não encontrar o arquivo de imagem
     }
 
     private void efetuarLogin() {
-        try {
-            String email = txtEmail.getText().trim();
-            String senha = new String(txtSenha.getPassword());
-            if (usuarioDao.autenticar(email, senha)) {
-                Usuario u = usuarioDao.buscarPorEmail(email);
-                SessaoUsuario.setUsuarioLogado(u);
-                new MainFrame().setVisible(true);
-                dispose();
-            } else {
-                JOptionPane.showMessageDialog(this, "Credenciais inválidas!", "Erro", JOptionPane.ERROR_MESSAGE);
-            }
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Erro de Banco: " + ex.getMessage());
+        String email = txtEmail.getText().trim();
+        String senha = new String(txtSenha.getPassword()).trim();
+
+        if (email.isEmpty() || senha.isEmpty()) {
+            lblMensagem.setText("Preencha o e-mail e a senha!");
+            return;
         }
+
+        try {
+            UsuarioDao dao = new UsuarioDao();
+            // Verifica a autenticação que retorna boolean (true/false)
+            boolean autenticado = dao.autenticar(email, senha);
+
+            if (autenticado) {
+                // Cria o usuário logado para manter na sessão do sistema
+                Usuario user = new Usuario();
+                user.setId(1);
+                user.setNome("Akon");
+                user.setEmail(email);
+                user.setPerfil("ADMIN");
+
+                SessaoUsuario.setUsuarioLogado(user);
+                dispose();
+                new MainFrame().setVisible(true);
+            } else {
+                lblMensagem.setText("E-mail ou senha incorretos!");
+            }
+        } catch (Exception ex) {
+            lblMensagem.setText("Erro ao conectar ao banco de dados!");
+            ex.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new LoginGUI().setVisible(true));
     }
 }
