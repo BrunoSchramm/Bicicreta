@@ -37,12 +37,29 @@ public class MainFrame extends JFrame {
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.setFont(new Font("Segoe UI", Font.BOLD, 15));
 
-        tabbedPane.addTab("Clientes", new ClientesPanel());
-        tabbedPane.addTab("Estoque", new EstoquePanel());
-        tabbedPane.addTab("Movimentações", new MovimentacoesPanel());
-        tabbedPane.addTab("Produtos", new ProdutosPanel());
-        tabbedPane.addTab("Serviços", new ServicosPanel());
-        tabbedPane.addTab("Status", new StatusPanel());
+        ClientesPanel clientesPanel = new ClientesPanel();
+        BicicletasPanel bicicletasPanel = new BicicletasPanel();
+        EstoquePanel estoquePanel = new EstoquePanel();
+        MovimentacoesPanel movimentacoesPanel = new MovimentacoesPanel();
+        ServicosPanel servicosPanel = new ServicosPanel();
+        StatusPanel statusPanel = new StatusPanel();
+
+        tabbedPane.addTab("Clientes", clientesPanel);
+        tabbedPane.addTab("Bicicletas", bicicletasPanel);
+        tabbedPane.addTab("Estoque Peças", estoquePanel);
+        tabbedPane.addTab("Movimentações", movimentacoesPanel);
+        tabbedPane.addTab("Serviços", servicosPanel);
+        tabbedPane.addTab("Status", statusPanel);
+
+        tabbedPane.addChangeListener(e -> {
+            Component selected = tabbedPane.getSelectedComponent();
+            if (selected == clientesPanel) clientesPanel.carregar();
+            else if (selected == bicicletasPanel) bicicletasPanel.carregar();
+            else if (selected == estoquePanel) estoquePanel.carregar();
+            else if (selected == movimentacoesPanel) movimentacoesPanel.carregar();
+            else if (selected == servicosPanel) servicosPanel.carregar();
+            else if (selected == statusPanel) statusPanel.carregarDados();
+        });
 
         setLayout(new BorderLayout());
         add(topBar, BorderLayout.NORTH);

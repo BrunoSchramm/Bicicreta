@@ -6,6 +6,8 @@ import MODEL.Cliente;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class ClientesPanel extends JPanel {
     private ClienteDao clienteDao = new ClienteDao();
@@ -24,6 +26,7 @@ public class ClientesPanel extends JPanel {
         table.setRowHeight(35);
         table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 15));
 
+        // Campos sem texto pré-escrito
         JPanel formPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
         JTextField txtNome = new JTextField(10);
         JTextField txtTel = new JTextField(8);
@@ -47,26 +50,39 @@ public class ClientesPanel extends JPanel {
         formPanel.add(btnAcao);
         formPanel.add(btnLimpar);
 
-        Runnable reset = () -> {
+        Runnable resetForm = () -> {
+            txtNome.setText("");
+            txtTel.setText("");
+            txtEmail.setText("");
+            txtEnd.setText("");
             table.clearSelection();
-            selectedId = -1;
-            txtNome.setText(""); txtTel.setText(""); txtEmail.setText(""); txtEnd.setText("");
-            btnAcao.setText("Adicionar Cliente");
-            btnAcao.setBackground(new Color(40, 110, 90));
         };
 
-        btnLimpar.addActionListener(e -> reset.run());
+        btnLimpar.addActionListener(e -> resetForm.run());
+
+        // Clique fora / Espaço vazio para deselecionar
+        table.addMouseListener(new MouseAdapter() {
+            @Override public void mouseClicked(MouseEvent e) {
+                if (table.rowAtPoint(e.getPoint()) == -1) table.clearSelection();
+            }
+        });
 
         table.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting() && table.getSelectedRow() != -1) {
+            if (!e.getValueIsAdjusting()) {
                 int row = table.getSelectedRow();
-                selectedId = (int) model.getValueAt(row, 0);
-                txtNome.setText(model.getValueAt(row, 1).toString());
-                txtTel.setText(model.getValueAt(row, 2) != null ? model.getValueAt(row, 2).toString() : "");
-                txtEmail.setText(model.getValueAt(row, 3) != null ? model.getValueAt(row, 3).toString() : "");
-                txtEnd.setText(model.getValueAt(row, 4) != null ? model.getValueAt(row, 4).toString() : "");
-                btnAcao.setText("Salvar Alterações");
-                btnAcao.setBackground(new Color(40, 120, 180));
+                if (row != -1) {
+                    selectedId = (int) model.getValueAt(row, 0);
+                    txtNome.setText(model.getValueAt(row, 1).toString());
+                    txtTel.setText(model.getValueAt(row, 2) != null ? model.getValueAt(row, 2).toString() : "");
+                    txtEmail.setText(model.getValueAt(row, 3) != null ? model.getValueAt(row, 3).toString() : "");
+                    txtEnd.setText(model.getValueAt(row, 4) != null ? model.getValueAt(row, 4).toString() : "");
+                    btnAcao.setText("Salvar Alterações");
+                    btnAcao.setBackground(new Color(40, 120, 180));
+                } else {
+                    selectedId = -1;
+                    btnAcao.setText("Adicionar Cliente");
+                    btnAcao.setBackground(new Color(40, 110, 90));
+                }
             }
         });
 
@@ -98,7 +114,7 @@ public class ClientesPanel extends JPanel {
                     JOptionPane.showMessageDialog(this, "Cliente atualizado com sucesso!");
                 }
                 carregar();
-                reset.run();
+                resetForm.run();
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "Erro: " + ex.getMessage());
             }
@@ -113,30 +129,34 @@ public class ClientesPanel extends JPanel {
 
         btnExcluir.addActionListener(e -> {
             if (selectedId == -1) {
-                JOptionPane.showMessageDialog(this, "Selecione um cliente na tabela para excluir!", "Aviso", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Selecione um cliente para excluir!", "Aviso", JOptionPane.WARNING_MESSAGE);
                 return;
             }
-            int confirm = JOptionPane.showConfirmDialog(this, "Tem certeza que deseja excluir o cliente ID " + selectedId + "?", "Confirmar Exclusão", JOptionPane.YES_NO_OPTION);
-            if (confirm == JOptionPane.YES_OPTION) {
+            if (JOptionPane.showConfirmDialog(this, "Excluir cliente ID " + selectedId + "?", "Confirmação", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
                 try {
                     clienteDao.excluir(selectedId);
                     JOptionPane.showMessageDialog(this, "Cliente excluído com sucesso!");
                     carregar();
-                    reset.run();
+                    resetForm.run();
                 } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(this, "Erro ao excluir cliente: " + ex.getMessage());
+                    JOptionPane.showMessageDialog(this, "Erro ao excluir: " + ex.getMessage());
                 }
             }
         });
         bottomPanel.add(btnExcluir);
 
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.getViewport().addMouseListener(new MouseAdapter() {
+            @Override public void mouseClicked(MouseEvent e) { table.clearSelection(); }
+        });
+
         carregar();
         add(formPanel, BorderLayout.NORTH);
-        add(new JScrollPane(table), BorderLayout.CENTER);
+        add(scrollPane, BorderLayout.CENTER);
         add(bottomPanel, BorderLayout.SOUTH);
     }
 
-    private void carregar() {
+    public void carregar() {
         model.setRowCount(0);
         try {
             for (Cliente c : clienteDao.listar()) {

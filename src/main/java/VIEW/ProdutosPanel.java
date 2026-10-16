@@ -6,6 +6,8 @@ import MODEL.Produto;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class ProdutosPanel extends JPanel {
     private ProdutoDao produtoDao = new ProdutoDao();
@@ -45,25 +47,36 @@ public class ProdutosPanel extends JPanel {
         formPanel.add(btnAcao);
         formPanel.add(btnLimpar);
 
-        Runnable reset = () -> {
+        Runnable resetForm = () -> {
+            txtNome.setText("");
+            txtPreco.setText("");
+            txtDesc.setText("");
             table.clearSelection();
-            selectedId = -1;
-            txtNome.setText(""); txtPreco.setText(""); txtDesc.setText("");
-            btnAcao.setText("Adicionar Bicicleta");
-            btnAcao.setBackground(new Color(40, 110, 90));
         };
 
-        btnLimpar.addActionListener(e -> reset.run());
+        btnLimpar.addActionListener(e -> resetForm.run());
+
+        table.addMouseListener(new MouseAdapter() {
+            @Override public void mouseClicked(MouseEvent e) {
+                if (table.rowAtPoint(e.getPoint()) == -1) table.clearSelection();
+            }
+        });
 
         table.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting() && table.getSelectedRow() != -1) {
+            if (!e.getValueIsAdjusting()) {
                 int row = table.getSelectedRow();
-                selectedId = (int) model.getValueAt(row, 0);
-                txtNome.setText(model.getValueAt(row, 1).toString());
-                txtPreco.setText(model.getValueAt(row, 2).toString().replace("R$ ", "").replace(",", "."));
-                txtDesc.setText(model.getValueAt(row, 3) != null ? model.getValueAt(row, 3).toString() : "");
-                btnAcao.setText("Salvar Alterações");
-                btnAcao.setBackground(new Color(40, 120, 180));
+                if (row != -1) {
+                    selectedId = (int) model.getValueAt(row, 0);
+                    txtNome.setText(model.getValueAt(row, 1).toString());
+                    txtPreco.setText(model.getValueAt(row, 2).toString().replace("R$ ", "").replace(",", "."));
+                    txtDesc.setText(model.getValueAt(row, 3) != null ? model.getValueAt(row, 3).toString() : "");
+                    btnAcao.setText("Salvar Alterações");
+                    btnAcao.setBackground(new Color(40, 120, 180));
+                } else {
+                    selectedId = -1;
+                    btnAcao.setText("Adicionar Bicicleta");
+                    btnAcao.setBackground(new Color(40, 110, 90));
+                }
             }
         });
 
@@ -81,7 +94,7 @@ public class ProdutosPanel extends JPanel {
                     JOptionPane.showMessageDialog(this, "Bicicleta atualizada com sucesso!");
                 }
                 carregar();
-                reset.run();
+                resetForm.run();
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "Erro: " + ex.getMessage());
             }
@@ -104,7 +117,7 @@ public class ProdutosPanel extends JPanel {
                     produtoDao.excluir(selectedId);
                     JOptionPane.showMessageDialog(this, "Bicicleta excluída com sucesso!");
                     carregar();
-                    reset.run();
+                    resetForm.run();
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(this, "Erro ao excluir: " + ex.getMessage());
                 }
@@ -112,13 +125,18 @@ public class ProdutosPanel extends JPanel {
         });
         bottomPanel.add(btnExcluir);
 
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.getViewport().addMouseListener(new MouseAdapter() {
+            @Override public void mouseClicked(MouseEvent e) { table.clearSelection(); }
+        });
+
         carregar();
         add(formPanel, BorderLayout.NORTH);
-        add(new JScrollPane(table), BorderLayout.CENTER);
+        add(scrollPane, BorderLayout.CENTER);
         add(bottomPanel, BorderLayout.SOUTH);
     }
 
-    private void carregar() {
+    public void carregar() {
         model.setRowCount(0);
         try {
             for (Produto p : produtoDao.listar()) {

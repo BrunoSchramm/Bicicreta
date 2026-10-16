@@ -6,6 +6,8 @@ import MODEL.Insumo;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class EstoquePanel extends JPanel {
     private InsumoDao insumoDao = new InsumoDao();
@@ -26,9 +28,9 @@ public class EstoquePanel extends JPanel {
 
         JPanel formPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
         JTextField txtNome = new JTextField(10);
-        JTextField txtUnidade = new JTextField("UN", 4);
-        JTextField txtQtd = new JTextField("10", 4);
-        JTextField txtMin = new JTextField("3", 4);
+        JTextField txtUnidade = new JTextField(4);
+        JTextField txtQtd = new JTextField(4);
+        JTextField txtMin = new JTextField(4);
 
         JButton btnAcao = new JButton("Adicionar Peça");
         btnAcao.setFont(new Font("Segoe UI", Font.BOLD, 14));
@@ -47,38 +49,49 @@ public class EstoquePanel extends JPanel {
         formPanel.add(btnAcao);
         formPanel.add(btnLimpar);
 
-        Runnable reset = () -> {
+        Runnable resetForm = () -> {
+            txtNome.setText("");
+            txtUnidade.setText("");
+            txtQtd.setText("");
+            txtMin.setText("");
             table.clearSelection();
-            selectedId = -1;
-            txtNome.setText(""); txtUnidade.setText("UN"); txtQtd.setText("10"); txtMin.setText("3");
-            btnAcao.setText("Adicionar Peça");
-            btnAcao.setBackground(new Color(40, 110, 90));
         };
 
-        btnLimpar.addActionListener(e -> reset.run());
+        btnLimpar.addActionListener(e -> resetForm.run());
+
+        table.addMouseListener(new MouseAdapter() {
+            @Override public void mouseClicked(MouseEvent e) {
+                if (table.rowAtPoint(e.getPoint()) == -1) table.clearSelection();
+            }
+        });
 
         table.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting() && table.getSelectedRow() != -1) {
+            if (!e.getValueIsAdjusting()) {
                 int row = table.getSelectedRow();
-                selectedId = (int) model.getValueAt(row, 0);
-                txtNome.setText(model.getValueAt(row, 1).toString());
-                txtUnidade.setText(model.getValueAt(row, 2).toString());
-                txtQtd.setText(model.getValueAt(row, 3).toString());
-                txtMin.setText(model.getValueAt(row, 4).toString());
-                btnAcao.setText("Salvar Alterações");
-                btnAcao.setBackground(new Color(40, 120, 180));
+                if (row != -1) {
+                    selectedId = (int) model.getValueAt(row, 0);
+                    txtNome.setText(model.getValueAt(row, 1).toString());
+                    txtUnidade.setText(model.getValueAt(row, 2).toString());
+                    txtQtd.setText(model.getValueAt(row, 3).toString());
+                    txtMin.setText(model.getValueAt(row, 4).toString());
+                    btnAcao.setText("Salvar Alterações");
+                    btnAcao.setBackground(new Color(40, 120, 180));
+                } else {
+                    selectedId = -1;
+                    btnAcao.setText("Adicionar Peça");
+                    btnAcao.setBackground(new Color(40, 110, 90));
+                }
             }
         });
 
         btnAcao.addActionListener(e -> {
             try {
-                int qtd = Integer.parseInt(txtQtd.getText().trim());
-                int min = Integer.parseInt(txtMin.getText().trim());
-
-                if (qtd < 0 || min < 0) {
-                    JOptionPane.showMessageDialog(this, "A quantidade não pode ser negativa!", "Aviso", JOptionPane.WARNING_MESSAGE);
+                if (txtNome.getText().trim().isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "Preencha o nome da peça!", "Aviso", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
+                int qtd = Integer.parseInt(txtQtd.getText().trim());
+                int min = Integer.parseInt(txtMin.getText().trim());
 
                 Insumo i = new Insumo(selectedId == -1 ? 0 : selectedId, txtNome.getText().trim(), txtUnidade.getText().trim(), qtd, min);
                 if (selectedId == -1) {
@@ -89,7 +102,7 @@ public class EstoquePanel extends JPanel {
                     JOptionPane.showMessageDialog(this, "Peça atualizada com sucesso!");
                 }
                 carregar();
-                reset.run();
+                resetForm.run();
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "Erro: " + ex.getMessage());
             }
@@ -112,7 +125,7 @@ public class EstoquePanel extends JPanel {
                     insumoDao.excluir(selectedId);
                     JOptionPane.showMessageDialog(this, "Peça excluída com sucesso!");
                     carregar();
-                    reset.run();
+                    resetForm.run();
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(this, "Erro ao excluir: " + ex.getMessage());
                 }
@@ -120,13 +133,18 @@ public class EstoquePanel extends JPanel {
         });
         bottomPanel.add(btnExcluir);
 
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.getViewport().addMouseListener(new MouseAdapter() {
+            @Override public void mouseClicked(MouseEvent e) { table.clearSelection(); }
+        });
+
         carregar();
         add(formPanel, BorderLayout.NORTH);
-        add(new JScrollPane(table), BorderLayout.CENTER);
+        add(scrollPane, BorderLayout.CENTER);
         add(bottomPanel, BorderLayout.SOUTH);
     }
 
-    private void carregar() {
+    public void carregar() {
         model.setRowCount(0);
         try {
             for (Insumo i : insumoDao.listar()) {

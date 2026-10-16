@@ -10,19 +10,21 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class MovimentacoesPanel extends JPanel {
     private MovimentacaoDao movDao = new MovimentacaoDao();
     private InsumoDao insumoDao = new InsumoDao();
     private DefaultTableModel model;
+    private DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public MovimentacoesPanel() {
         setLayout(new BorderLayout(15, 15));
         setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
         JPanel card = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
-        JTextField txtIdPeca = new JTextField("1", 4);
-        JTextField txtQtd = new JTextField("5", 5);
+        JTextField txtIdPeca = new JTextField(4);
+        JTextField txtQtd = new JTextField(5);
         JComboBox<String> cbTipo = new JComboBox<>(new String[]{"ENTRADA", "SAIDA"});
         JButton btnLancar = new JButton("Registrar Movimentação");
 
@@ -52,13 +54,15 @@ public class MovimentacoesPanel extends JPanel {
                 }
 
                 if ("SAIDA".equals(tipo) && (ins.getQuantquantidadeAtual() - qtd < 0)) {
-                    JOptionPane.showMessageDialog(this, "Operação Recusada! Estoque insuficiente para esta saída.\nEstoque Atual: " + ins.getQuantquantidadeAtual(), "Aviso", JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "Operação Recusada! Estoque insuficiente.\nEstoque Atual: " + ins.getQuantquantidadeAtual(), "Aviso", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
 
                 int idUser = SessaoUsuario.getUsuarioLogado() != null ? SessaoUsuario.getUsuarioLogado().getId() : 1;
                 movDao.registrarMovimentacao(new Movimentacao(0, idPeca, idUser, tipo, qtd, LocalDateTime.now()));
                 carregar();
+                txtIdPeca.setText("");
+                txtQtd.setText("");
                 JOptionPane.showMessageDialog(this, "Movimentação registrada com sucesso!");
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "Erro: " + ex.getMessage());
@@ -70,16 +74,17 @@ public class MovimentacoesPanel extends JPanel {
         add(new JScrollPane(table), BorderLayout.CENTER);
     }
 
-    private void carregar() {
+    public void carregar() {
         model.setRowCount(0);
         try {
             for (Movimentacao m : movDao.listar()) {
+                String dataFormatada = m.getData_movimentacao() != null ? m.getData_movimentacao().format(dtf) : "";
                 model.addRow(new Object[]{
                         m.getId(),
                         m.getIdInsumo(),
                         m.getTipo(),
                         m.getQuantidade(),
-                        m.getData_movimentacao() != null ? m.getData_movimentacao().toString().replace("T", " ") : "",
+                        dataFormatada,
                         m.getIdUsuarios()
                 });
             }

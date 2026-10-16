@@ -20,24 +20,28 @@ public class StatusPanel extends JPanel {
         setLayout(new GridLayout(2, 1, 15, 15));
         setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
-        // Tabela de Alertas/Status de Serviços
+        // Tabela Status Geral de Serviços - NÃO EDITÁVEL
         JPanel panelEntregas = new JPanel(new BorderLayout());
         JLabel lblEntregas = new JLabel("Status Geral de Serviços e Entregas");
         lblEntregas.setFont(new Font("Segoe UI", Font.BOLD, 16));
         panelEntregas.add(lblEntregas, BorderLayout.NORTH);
 
-        modelEntregas = new DefaultTableModel(new String[]{"ID", "Cliente ID", "Data Entrega", "Estado Atual", "Valor"}, 0);
+        modelEntregas = new DefaultTableModel(new String[]{"ID", "Cliente ID", "Data Entrega", "Estado Atual", "Valor"}, 0) {
+            @Override public boolean isCellEditable(int r, int c) { return false; }
+        };
         JTable tableEntregas = new JTable(modelEntregas);
         panelEntregas.add(new JScrollPane(tableEntregas), BorderLayout.CENTER);
 
-        // Tabela de Alertas de Estoque Crítico
+        // Tabela Alertas de Estoque Crítico - NÃO EDITÁVEL
         JPanel panelEstoque = new JPanel(new BorderLayout());
         JLabel lblEstoque = new JLabel("Alertas de Estoque de Peças Crítico");
         lblEstoque.setFont(new Font("Segoe UI", Font.BOLD, 16));
         lblEstoque.setForeground(new Color(180, 50, 50));
         panelEstoque.add(lblEstoque, BorderLayout.NORTH);
 
-        modelEstoque = new DefaultTableModel(new String[]{"ID Peça", "Nome Peça", "Qtd Atual", "Estoque Mínimo"}, 0);
+        modelEstoque = new DefaultTableModel(new String[]{"ID Peça", "Nome Peça", "Qtd Atual", "Estoque Mínimo"}, 0) {
+            @Override public boolean isCellEditable(int r, int c) { return false; }
+        };
         JTable tableEstoque = new JTable(modelEstoque);
         panelEstoque.add(new JScrollPane(tableEstoque), BorderLayout.CENTER);
 

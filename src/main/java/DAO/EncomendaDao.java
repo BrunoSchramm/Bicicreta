@@ -16,18 +16,21 @@ public class EncomendaDao {
                 return estado;
             }
         }
-        return null;
+        return Entrega.EstadoAtual.EM_ANDAMENTO;
     }
 
     public List<Entrega> listar() throws SQLException {
         List<Entrega> lista = new ArrayList<>();
-        String sql = "SELECT * FROM servicos";
+        String sql = "SELECT * FROM servicos ORDER BY id DESC";
         try (Statement stmt = ConexaoBanco.getConexao().createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
                 lista.add(new Entrega(
                         rs.getInt("id"),
                         rs.getInt("id_clientes"),
+                        rs.getInt("id_bicicletas"),
                         rs.getInt("id_usuarios"),
+                        rs.getString("defeito_relatado"),
+                        rs.getString("descricao_servico"),
                         rs.getString("data_pedido"),
                         rs.getString("data_entrega"),
                         converterEstado(rs.getString("estado_atual")),
@@ -39,14 +42,18 @@ public class EncomendaDao {
     }
 
     public void inserir(Entrega e) throws SQLException {
-        String sql = "INSERT INTO servicos (id_clientes, id_usuarios, data_pedido, data_entrega, estado_atual, valor_total) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO servicos (id_clientes, id_bicicletas, id_usuarios, defeito_relatado, descricao_servico, data_pedido, data_entrega, estado_atual, valor_total) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = ConexaoBanco.getConexao().prepareStatement(sql)) {
             stmt.setInt(1, e.getIdClientes());
-            stmt.setInt(2, e.getIdUsuarios());
-            stmt.setString(3, e.getDataPedido());
-            stmt.setString(4, e.getDataEntrega());
-            stmt.setString(5, e.getEstadoAtual() != null ? e.getEstadoAtual().getDescricao() : null);
-            stmt.setDouble(6, e.getValorTotal());
+            stmt.setInt(2, e.getIdBicicletas());
+            stmt.setInt(3, e.getIdUsuarios());
+            stmt.setString(4, e.getDefeitoRelatado());
+            stmt.setString(5, e.getDescricaoServico());
+            stmt.setString(6, e.getDataPedido());
+            stmt.setString(7, e.getDataEntrega());
+            stmt.setString(8, e.getEstadoAtual() != null ? e.getEstadoAtual().getDescricao() : "Em andamento");
+            stmt.setDouble(9, e.getValorTotal());
             stmt.executeUpdate();
         }
     }
